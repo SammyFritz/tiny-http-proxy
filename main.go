@@ -234,12 +234,14 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		password,
 		basicOk,
 	}
+
 	// Cache miss -> Load data from requested URL and add to cache
 	if busy, ok := cache.has(fullUrl); !ok {
 		olo.Info("CACHE_MISS for requested '%s'", fullUrl)
 		promCounters["CACHE_MISS"].Inc()
 		defer busy.Unlock()
 		response, err := GetRemote(fullUrl, basicA)
+
 		if err != nil {
 			handleError(response, err, w)
 			return
@@ -258,7 +260,8 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		// make sure that content is only supposed to be downloaded
 		// browsers will never display content
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
-		w.Header().Set("Content-Disposition", "attachment")
+		//w.Header().Set("Content-Disposition", "attachment")
+
 		http.ServeContent(w, r, cacheURL, cacheResponse.loadedAt, cacheResponse.content)
 	}
 }
