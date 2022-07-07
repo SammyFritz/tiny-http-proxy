@@ -98,7 +98,7 @@ func prepare() {
 	}
 
 	client = &http.Client{
-		Timeout: time.Second * 120,
+		Timeout: time.Duration(config.ClientTimeout) * time.Second,
 	}
 
 	if len(config.Proxy) > 0 {

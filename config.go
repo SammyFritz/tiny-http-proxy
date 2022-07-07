@@ -21,6 +21,7 @@ type Config struct {
 	ListenPort                 int      `yaml:"listen_port"`
 	ListenSSLPort              int      `yaml:"listen_ssl_port"`
 	Timeout                    int      `yaml:"timeout_in_s"`
+	ClientTimeout              int      `yaml:"client_timeout_in_s"`
 	ProxyNetworkStrings        []string `yaml:"reverse_proxy_networks"`
 	ProxyNetworks              []net.IPNet
 	PrivateKey                 string                  `yaml:"ssl_private_key"`
