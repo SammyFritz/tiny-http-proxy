@@ -138,6 +138,10 @@ func prepare() {
 		Name: config.PrometheusMetricPrefix + "pkgproxy_cache_miss_total",
 		Help: "The total number of requests were no cache was found",
 	})
+	promCounters["CACHE_INVALIDATE"] = promauto.NewCounter(prometheus.CounterOpts{
+		Name: config.PrometheusMetricPrefix + "pkgproxy_cache_invalidation_total",
+		Help: "The total number of PATCHrequests were the cached item was forced to be invalidated",
+	})
 	promCounters["CACHE_TOO_OLD"] = promauto.NewCounter(prometheus.CounterOpts{
 		Name: config.PrometheusMetricPrefix + "pkgproxy_cache_old_total",
 		Help: "The total number of requests that were already cached, but the cache was too old and needed to be renewed",
@@ -171,9 +175,9 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	olo.Info("Incoming request '%s' from '%s' on '%s'", r.URL.Path, requesterIP, r.Host)
-	if r.Method != "GET" {
+	if r.Method != "GET" && r.Method != "HEAD" && r.Method != "PATCH" {
 		olo.Warn("Incoming nonGET HTTP request '%s' from '%s' on '%s'", r.URL.Path, requesterIP, r.Host)
-		errorMessage := fmt.Sprintf("HTTP method '%s' other than GET not allowed for '%s' from '%s' on '%s'", r.Method, r.URL, requesterIP, r.Host)
+		errorMessage := fmt.Sprintf("HTTP method '%s' other than GET, HEAD or PATCH not allowed for '%s' from '%s' on '%s'", r.Method, r.URL, requesterIP, r.Host)
 		promCounters["TOTAL_HTTP_NONGET_REQUESTS"].Inc()
 		handleError(nil, errors.New(errorMessage), w)
 		return
@@ -251,8 +255,13 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		promCounters["CACHE_HIT"].Inc()
 	}
 
+	invalidateCache := false
+	if r.Method == "PATCH" {
+		invalidateCache = true
+	}
+
 	// The cache has definitely the data we want, so get a reader for that
-	cacheResponse, err := cache.get(fullUrl, defaultCacheTTL, basicA)
+	cacheResponse, err := cache.get(fullUrl, defaultCacheTTL, basicA, invalidateCache)
 
 	if err != nil {
 		handleError(nil, err, w)
@@ -284,8 +293,6 @@ func GetRemote(requestedURL string, basicA BasicAuth) (*http.Response, error) {
 	}
 	before := time.Now()
 	response, err := client.Do(req)
-	duration := time.Since(before).Seconds()
-	olo.Debug("GETing " + requestedURL + " took " + strconv.FormatFloat(duration, 'f', 5, 64) + "s")
 	if err != nil {
 		return response, err
 	}
@@ -295,6 +302,8 @@ func GetRemote(requestedURL string, basicA BasicAuth) (*http.Response, error) {
 
 	if response.StatusCode == 200 {
 		promCounters["REMOTE_OK"].Inc()
+		duration := time.Since(before).Seconds()
+		olo.Debug("GETing " + requestedURL + " took " + strconv.FormatFloat(duration, 'f', 5, 64) + "s")
 		err = cache.put(requestedURL, &reader, response.ContentLength)
 		if err != nil {
 			return response, err
