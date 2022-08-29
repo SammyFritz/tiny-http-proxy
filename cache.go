@@ -190,6 +190,7 @@ func (c *Cache) get(requestedURL string, defaultCacheTTL time.Duration, basicA B
 	urlParts := strings.SplitN(requestedURL, "/", 4)
 
 	fileCacheDir := filepath.Join(cacheFolder, urlParts[2])
+	// TODO if main url is called (google.com) the '3' Item doesen`t exists
 	uriEncoded := url.QueryEscape(urlParts[3])
 	cacheFile := filepath.Join(fileCacheDir, uriEncoded)
 

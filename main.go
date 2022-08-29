@@ -247,8 +247,12 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		response, err := GetRemote(fullUrl, basicA)
 
 		if err != nil {
-			handleError(response, err, w)
-			return
+			if os.IsTimeout(err) {
+				olo.Info("CLIENT_TIMEOUT for requested '%s'", cacheURL)
+			} else {
+				handleError(response, err, w)
+				return
+			}
 		}
 	} else {
 		olo.Info("CACHE_HIT for requested '%s'", cacheURL)
@@ -264,6 +268,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	cacheResponse, err := cache.get(fullUrl, defaultCacheTTL, basicA, invalidateCache)
 
 	if err != nil {
+		olo.Info("Couldn`t serve request'%s'", cacheURL)
 		handleError(nil, err, w)
 	} else {
 		// make sure that content is only supposed to be downloaded
