@@ -15,7 +15,7 @@ import (
 
 func handleError(response *http.Response, err error, w http.ResponseWriter) {
 	if response != nil {
-
+		olo.Debug("Sending ErrorResponse with response")
 		if response.StatusCode == 401 {
 			olo.Info(err.Error())
 		} else {
@@ -32,10 +32,18 @@ func handleError(response *http.Response, err error, w http.ResponseWriter) {
 		if err != nil {
 			olo.Error("Error while reading failed response body")
 		}
-		w.Write(bodyBytes)
+		_, err = w.Write(bodyBytes)
+		if err != nil {
+			olo.Error("Sending response failed: " + err.Error())
+		}
+
 	} else {
+		olo.Debug("Sending ErrorResponse with no response")
 		w.WriteHeader(500)
-		fmt.Fprint(w, err.Error())
+		_, err := w.Write([]byte(err.Error()))
+		if err != nil {
+			olo.Error("Sending response failed: " + err.Error())
+		}
 	}
 }
 
