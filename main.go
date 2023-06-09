@@ -248,7 +248,9 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			if os.IsTimeout(err) {
-				olo.Info("CLIENT_TIMEOUT for requested '%s'", cacheURL)
+				olo.Info("CLIENT_TIMEOUT for request '%s'", cacheURL)
+			} else if err == syscall.ECONNREFUSED {
+				olo.Info("Connection refused try to serve request from cache '%s'", cacheURL)
 			} else {
 				handleError(response, err, w)
 				return
@@ -291,7 +293,7 @@ func GetRemote(requestedURL string, basicA BasicAuth) (*http.Response, error) {
 	if err != nil {
 		olo.Warn("Error creating GET request for %s Error: %s", requestedURL, err.Error())
 	}
-	req.Header.Set("User-Agent", "https://github.com/xorpaul/tinyproxy/")
+	req.Header.Set("User-Agent", "https://github.com/SammyFritz/tinyproxy/")
 	req.Header.Set("Connection", "keep-alive")
 	if basicA.Ok {
 		req.SetBasicAuth(basicA.Username, basicA.Password)
