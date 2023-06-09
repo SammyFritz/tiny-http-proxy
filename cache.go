@@ -299,7 +299,8 @@ func (c *Cache) put(requestedURL string, content *io.Reader, contentLength int64
 func checkCacheTTL(filePath string, requestedURL string, defaultCacheTTL time.Duration, basicA BasicAuth, invalidateCache bool) error {
 	fi, err := os.Stat(filePath)
 	if err != nil {
-		olo.Debug("Error while accessing File '%s': '%s'", filepath, err)
+		olo.Debug("Error wile File handling for the following file: '%s'", filePath)
+		olo.Debug("Error while accessing File: '%s'", err)
 		promCounters["CACHE_ITEM_MISSING"].Inc()
 		_, err := GetRemote(requestedURL, basicA)
 		if err != nil {
