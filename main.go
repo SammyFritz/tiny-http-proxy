@@ -256,6 +256,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 				olo.Info("Another Error accured: '%s'. Try to serve anyway", err)
 				//handleError(response, err, w)
 				//return
+				_ = response
 			}
 		}
 	} else {
