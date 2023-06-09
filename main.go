@@ -252,8 +252,9 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 			} else if err == syscall.ECONNREFUSED {
 				olo.Info("Connection refused try to serve request from cache '%s'", cacheURL)
 			} else {
-				handleError(response, err, w)
-				return
+				olo.Info("Another Error accured: '%s'. Try to serve anyway", err)
+				//handleError(response, err, w)
+				//return
 			}
 		}
 	} else {
